@@ -1,64 +1,82 @@
-# Flight-Fare-Prediction
-![Scraped](https://img.shields.io/badge/Dataset-Web_sraping-blue.svg) ![Python 3.10](https://img.shields.io/badge/Python-3.10-brightgreen.svg) ![Scikit-learn](https://img.shields.io/badge/Library-Scikit_Learn-orange.svg) ![Flask](https://img.shields.io/badge/Framework-Flask-black.svg)
+✈️ SkyFare AI — Flight Fare Prediction System
 
-> A Flight price prediction application that predicts fares of flights for a particular date based on various parameters like Source, Destination, Stops & Airline. Data used in this project is scraped from an online ticket booking website 'Ease my Trip' using a Python module name BeautifulSoup. The dataset goes through Data Cleaning, Data Wrangling, and Exploratory Data Analysis which gives insights about the data and later uses Machine Learning techniques to train the data for prediction.
-It is a regression problem that is solved using RandomForestRegressor ML Algorithm which generates accurate results for price prediction. A web application is created using Flask through which users can interact and get accurate predictions of flight fares.
+A Machine Learning web application that predicts airline ticket prices based on travel details such as source, destination, date, airline, and number of stops. The system uses historical flight data, performs preprocessing and analysis, and applies a Random Forest Regressor model to generate accurate fare predictions.
 
-## Models with their Accuracy of Prediction
+🎯 Features
+Predict flight prices instantly
+User-friendly web interface
+Multiple model comparison
+Real-time predictions using ML
+End-to-end deployment using Flask
+Responsive modern UI
+🛠️ Technologies Used
 
-| Type of Model            | Accuracy |
-| ------------------------ | -------- |
-| Linear Regression        | 72.00%   |
-| XGBoost                  | 82.00%   |
-| ExtraTreeReressor        | 93.70%   |
-| Random Forest            | 93.70%   |
+Programming:
+Python, HTML, CSS, JavaScript
 
-## Features:
+Machine Learning:
+Scikit-learn, Random Forest, XGBoost, Pandas, NumPy
 
-- Departure & Arrival Date
-- Source (4 Destinations were selected for this project)
-- Destination (4 Destinations were selected for this project)
-- Total stops
-- Selected Airlines
-- Price (Target)
+Web & Deployment:
+Flask, Gunicorn,GitHub
 
-## NOTE
+Data Processing:
+BeautifulSoup, Data Cleaning, Feature Engineering, EDA
 
-> You can access the website live at: https://flight-fare-prediction-i1mr.onrender.com/ <br>
-Python version 3.10.9 was used for the whole project.<br>
+📂 Project Structure
+SkyFare-AI
+│
+├── app.py
+├── flight.pkl
+├── requirements.txt
+├── Procfile
+├── runtime.txt
+│
+├── templates/
+│   ├── index.html
+│   └── predict.html
+│
+├── static/
+└── README.md
+⚙️ Run Locally
+git clone https://github.com/Adityatomar28/SkyFare-AI.git
 
-## Steps to run this application in your system
+cd SkyFare-AI
 
-1. Clone or download the repo.
- 
-2. Open the command prompt in the downloaded folder.
-
-3. Install all the dependencies:
-
-```
 pip install -r requirements.txt
-```
 
-4. Run the application
-
-```
 python app.py
-```
 
-## Technologies Used:
+Open:
 
-<img src="https://img.shields.io/badge/-Python-blue?style=for-the-badge"> <img src="https://img.shields.io/badge/-Jupyter Notebook-orange?style=for-the-badge"> <img src="https://img.shields.io/badge/-Pandas-purple?style=for-the-badge"> <img src="https://img.shields.io/badge/-Scikit_Learn-darkgreen?style=for-the-badge"> <img src="https://img.shields.io/badge/-Flask-black?style=for-the-badge"> 
+http://127.0.0.1:5000
+📌 Example Prediction
 
-## Sample images of the web application
+Input
 
-### Prediction Page
-<img src="img/predict page.jpg" alt="My cool logo"/>
-<br>
+Source: Mumbai
+Destination: Delhi
+Stops: Non-stop
+Airline: IndiGo
 
-### Predictions
-In the Below predictions we have selected the source as Mumbai & the destination as Delhi, the flight would be non-stop & the airline we have selected is IndiGo and the price we got is around Rs 5239 
-<br>
+Output
 
-<img src="img/prediction.jpg" alt="My cool logo"/>
-<br>
+Predicted Price: ₹5239
+🚀 Skills Demonstrated
+Machine Learning
+Regression Modeling
+Data Preprocessing
+Feature Engineering
+Flask Web Development
+Model Deployment
+Git & GitHub
+End-to-End ML Project
+👨‍💻 Author
 
+Aditya Singh Tomar
+
+GitHub:
+https://github.com/Adityatomar28
+
+LinkedIn:
+https://linkedin.com/in/aditya-singh-tomar-1683a3279
