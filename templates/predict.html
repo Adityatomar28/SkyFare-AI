@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predict Fare — SkyFare AI</title>
+<link rel="shortcut icon" href="{{ url_for('static', filename='logo.jpg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════ */
+:root {
+  --primary: #667eea;
+  --secondary: #764ba2;
+  --accent: #00c6ff;
+  --bg: #07080f;
+  --bg2: #0d0f1c;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-accent: rgba(102,126,234,0.45);
+  --text: #f0f2ff;
+  --text-muted: rgba(240,242,255,0.52);
+  --text-dim: rgba(240,242,255,0.25);
+  --grad-main: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --grad-accent: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  --shadow-card: 0 24px 64px rgba(0,0,0,0.55);
+  --shadow-glow: 0 0 48px rgba(102,126,234,0.22);
+  --radius: 20px;
+  --radius-sm: 13px;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --success: #00e5a0;
+  --error-col: #ff5f7e;
+}
+[data-theme="light"] {
+  --bg: #f4f6fb; --bg2: #eaecf5;
+  --surface: rgba(255,255,255,0.9); --surface-hover: rgba(255,255,255,1);
+  --border: rgba(102,126,234,0.14); --border-accent: rgba(102,126,234,0.38);
+  --text: #181b2e; --text-muted: rgba(24,27,46,0.55); --text-dim: rgba(24,27,46,0.28);
+  --shadow-card: 0 12px 48px rgba(102,126,234,0.11);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: none;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+@media(max-width:768px){ body { cursor:auto; } }
+
+/* ── Atmosphere ── */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: radial-gradient(ellipse 75% 55% at 50% -5%, rgba(102,126,234,0.16) 0%, transparent 70%);
+}
+.noise { position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.022;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.grid { position:fixed;inset:0;pointer-events:none;z-index:1;
+  background-image:linear-gradient(rgba(102,126,234,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(102,126,234,0.03) 1px,transparent 1px);
+  background-size:64px 64px; }
+
+/* ── Cursor ── */
+.cursor-dot { position:fixed;top:0;left:0;width:8px;height:8px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s; }
+.cursor-ring { position:fixed;top:0;left:0;width:36px;height:36px;border:1.5px solid rgba(102,126,234,.6);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .4s cubic-bezier(.23,1,.32,1),height .4s cubic-bezier(.23,1,.32,1),border-color .3s; }
+.cursor-ring.on { width:54px;height:54px;border-color:var(--accent); }
+.cursor-dot.on { width:4px;height:4px; }
+@media(max-width:768px){ .cursor-dot,.cursor-ring{display:none;} }
+
+/* Scroll progress */
+.scroll-bar { position:fixed;top:0;left:0;height:2px;z-index:2000;background:var(--grad-accent);width:0;transition:width .1s linear; }
+
+/* ═══════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════ */
+.navbar {
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:0 2.5rem;height:68px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(7,8,15,0.88);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(22px) saturate(1.5);
+  box-shadow:0 4px 32px rgba(0,0,0,0.25);
+}
+[data-theme="light"] .navbar { background:rgba(244,246,251,0.88); }
+.nav-brand {
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  color:var(--text);font-family:var(--font-display);font-weight:800;font-size:1.08rem;
+  letter-spacing:-0.02em;
+}
+.brand-icon {
+  width:36px;height:36px;background:var(--grad-main);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;color:#fff;box-shadow:0 4px 16px rgba(102,126,234,.42);
+}
+.nav-links { display:flex;gap:2rem;list-style:none;align-items:center; }
+.nav-links a {
+  font-size:.88rem;font-weight:500;color:var(--text-muted);
+  text-decoration:none;letter-spacing:.01em;transition:color .25s;position:relative;
+}
+.nav-links a::after { content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--grad-main);transform:scaleX(0);transform-origin:right;transition:transform .3s cubic-bezier(.23,1,.32,1); }
+.nav-links a:hover { color:var(--text); }
+.nav-links a:hover::after,.nav-links a.active-link::after { transform:scaleX(1);transform-origin:left; }
+.nav-links a.active-link { color:var(--text); }
+.nav-pill {
+  background:var(--grad-main)!important;color:#fff!important;
+  padding:8px 20px;border-radius:100px;font-weight:600!important;
+  box-shadow:0 4px 20px rgba(102,126,234,.4);transition:all .3s!important;
+}
+.nav-pill::after { display:none!important; }
+.nav-pill:hover { transform:translateY(-2px);box-shadow:0 8px 30px rgba(102,126,234,.58)!important; }
+.nav-right { display:flex;align-items:center;gap:1rem; }
+.theme-btn {
+  width:38px;height:38px;border:1px solid var(--border);background:var(--surface);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  cursor:none;color:var(--text-muted);font-size:.88rem;transition:all .3s;
+}
+.theme-btn:hover { border-color:var(--primary);color:var(--primary);background:rgba(102,126,234,.1); }
+.hamburger { display:none;flex-direction:column;gap:5px;cursor:none;background:none;border:none;padding:4px; }
+.hamburger span { width:22px;height:2px;background:var(--text);border-radius:2px;display:block;transition:all .3s; }
+.mob-menu { display:none;position:fixed;inset:0;top:68px;z-index:999;background:rgba(7,8,15,.97);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem; }
+[data-theme="light"] .mob-menu { background:rgba(244,246,251,.97); }
+.mob-menu.open { display:flex; }
+.mob-menu a { font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--text);text-decoration:none; }
+@media(max-width:768px){ .nav-links{display:none;} .hamburger{display:flex;} }
+
+/* ═══════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════ */
+.page-header {
+  position:relative;z-index:2;
+  padding:116px 2rem 48px;text-align:center;
+}
+.header-tag {
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,198,255,.08);border:1px solid rgba(0,198,255,.25);
+  color:var(--accent);padding:7px 18px;border-radius:100px;
+  font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.4rem;
+}
+.header-tag .blink { width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 1.8s infinite; }
+@keyframes blink { 0%,100%{opacity:1;}50%{opacity:.25;} }
+.page-header h1 {
+  font-family:var(--font-display);font-size:clamp(2rem,5vw,3.8rem);
+  font-weight:800;letter-spacing:-.04em;line-height:1.06;color:var(--text);margin-bottom:.9rem;
+}
+.page-header h1 em { font-style:normal;background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+.page-header p { font-size:.98rem;color:var(--text-muted);max-width:480px;margin:0 auto;line-height:1.72; }
+
+/* ═══════════════════════════════════════
+   MAIN GRID LAYOUT
+═══════════════════════════════════════ */
+.predict-wrap {
+  position:relative;z-index:2;
+  max-width:1120px;margin:0 auto;
+  padding:0 2rem 100px;
+  display:grid;grid-template-columns:1.15fr .85fr;gap:2.8rem;align-items:start;
+}
+@media(max-width:920px){ .predict-wrap { grid-template-columns:1fr; gap:2rem; } }
+
+/* ═══════════════════════════════════════
+   FORM CARD
+═══════════════════════════════════════ */
+.form-card {
+  background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:2.6rem 2.4rem;backdrop-filter:blur(20px);
+  box-shadow:var(--shadow-card);
+  animation:slideUp .7s var(--ease) both;
+}
+[data-theme="light"] .form-card { background:rgba(255,255,255,.88); }
+@keyframes slideUp { from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;} }
+
+.card-title { font-family:var(--font-display);font-size:1.38rem;font-weight:800;color:var(--text);letter-spacing:-.025em;margin-bottom:.3rem; }
+.card-sub { font-size:.82rem;color:var(--text-muted);margin-bottom:1.8rem; }
+.card-hr { height:1px;background:var(--border);margin-bottom:1.8rem; }
+
+/* Section labels */
+.fsec {
+  display:flex;align-items:center;gap:10px;margin:1.6rem 0 1.1rem;
+}
+.fsec span {
+  font-family:var(--font-display);font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);white-space:nowrap;
+}
+.fsec::before,.fsec::after { content:'';flex:1;height:1px;background:var(--border); }
+
+/* Form grid */
+.frow { display:grid;grid-template-columns:1fr 1fr;gap:1.1rem; }
+@media(max-width:500px){ .frow{grid-template-columns:1fr;} }
+.fgroup { margin-bottom:1.1rem; }
+.fgroup label {
+  display:flex;align-items:center;gap:7px;
+  font-size:.74rem;font-weight:700;color:var(--text-muted);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;
+}
+.fgroup label i { color:var(--primary);font-size:.7rem; }
+
+/* All inputs & selects */
+.fc {
+  width:100%;padding:12px 15px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text);font-family:var(--font-body);font-size:.9rem;
+  outline:none;transition:border-color .25s,box-shadow .25s,background .25s;
+  appearance:none;-webkit-appearance:none;
+}
+[data-theme="light"] .fc { background:rgba(255,255,255,.75); }
+.fc:focus {
+  border-color:var(--primary);
+  background:rgba(102,126,234,.06);
+  box-shadow:0 0 0 3px rgba(102,126,234,.13);
+}
+.fc option { background:var(--bg2);color:var(--text); }
+
+/* Select arrow wrapper */
+.sw { position:relative; }
+.sw::after {
+  content:'\f107';font-family:'Font Awesome 6 Free';font-weight:900;
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  color:var(--text-dim);pointer-events:none;font-size:.82rem;
+}
+
+/* Submit button */
+.btn-predict {
+  width:100%;padding:15px 20px;margin-top:1.4rem;
+  background:var(--grad-main);color:#fff;
+  border:none;border-radius:var(--radius-sm);
+  font-family:var(--font-display);font-size:1rem;font-weight:700;
+  cursor:none;transition:all .3s var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 8px 32px rgba(102,126,234,.44);
+  position:relative;overflow:hidden;letter-spacing:.02em;
+}
+.btn-predict::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .3s; }
+.btn-predict:hover { transform:translateY(-3px);box-shadow:0 16px 48px rgba(102,126,234,.6); }
+.btn-predict:hover::before { opacity:1; }
+.btn-predict:active { transform:translateY(0);box-shadow:0 4px 16px rgba(102,126,234,.4); }
+.btn-predict.busy { pointer-events:none;opacity:.82; }
+.btn-text { transition:opacity .2s; }
+.btn-predict.busy .btn-text { opacity:0; }
+.btn-spin {
+  position:absolute;width:22px;height:22px;
+  border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .75s linear infinite;
+  opacity:0;transition:opacity .2s;
+}
+.btn-predict.busy .btn-spin { opacity:1; }
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ═══════════════════════════════════════
+   RESULT BOX — Flask prediction_text
+═══════════════════════════════════════ */
+.result-box {
+  margin-top:1.8rem;
+  border-radius:var(--radius-sm);
+  padding:1.6rem 1.8rem;
+  animation:pop .55s cubic-bezier(.23,1,.32,1) both;
+}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px);}to{opacity:1;transform:none;}}
+
+.result-box.success {
+  background:linear-gradient(135deg,rgba(0,229,160,.08),rgba(0,198,255,.06));
+  border:1px solid rgba(0,229,160,.3);
+}
+.result-box.is-error {
+  background:rgba(255,95,126,.07);
+  border:1px solid rgba(255,95,126,.28);
+}
+.res-label { font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem; }
+.res-price {
+  font-family:var(--font-display);font-size:2.8rem;font-weight:800;
+  background:var(--grad-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.05;
+}
+.res-err-text { background:none!important;-webkit-text-fill-color:var(--error-col)!important;color:var(--error-col);font-size:1rem!important;font-weight:600; }
+.res-note { font-size:.8rem;color:var(--text-muted);margin-top:.4rem;line-height:1.6; }
+.res-badge { display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--success);padding:5px 13px;border-radius:100px;font-size:.73rem;font-weight:700;margin-bottom:.8rem; }
+.res-badge .dot { width:5px;height:5px;border-radius:50%;background:var(--success);animation:blink 1.5s infinite; }
+
+/* ═══════════════════════════════════════
+   RIGHT / SIDE PANEL
+═══════════════════════════════════════ */
+.side-panel { display:flex;flex-direction:column;gap:1.4rem; }
+
+.icard {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.7rem 1.8rem;
+  backdrop-filter:blur(14px);transition:border-color .3s,box-shadow .3s;
+  animation:slideUp .7s var(--ease) .1s both;
+}
+.icard:hover { border-color:var(--border-accent);box-shadow:var(--shadow-glow); }
+[data-theme="light"] .icard { background:rgba(255,255,255,.85); }
+.icard h4 {
+  font-family:var(--font-display);font-weight:700;font-size:.95rem;
+  color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:9px;
+}
+.icard h4 i { color:var(--primary); }
+
+/* Accuracy bar */
+.acc-bar-track { height:7px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden; }
+[data-theme="light"] .acc-bar-track { background:rgba(0,0,0,.06); }
+.acc-bar-fill { height:100%;background:var(--grad-main);border-radius:100px;width:0;transition:width 1.6s cubic-bezier(.23,1,.32,1); }
+.acc-bar-meta { display:flex;justify-content:space-between;margin-top:6px;font-size:.75rem; }
+.acc-bar-meta span:first-child { color:var(--text-muted); }
+.acc-bar-meta span:last-child { font-weight:700;color:var(--primary);font-family:var(--font-display); }
+
+/* Model list */
+.model-list { display:flex;flex-direction:column;gap:.65rem;margin-top:.5rem; }
+.mrow {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;border-radius:9px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+}
+[data-theme="light"] .mrow { background:rgba(0,0,0,.03); }
+.mrow .mname { font-size:.8rem;font-weight:600;color:var(--text); }
+.mrow .macc { font-size:.78rem;font-family:var(--font-display);font-weight:700;color:var(--text-muted); }
+.mrow.best { border-color:rgba(0,198,255,.3);background:rgba(0,198,255,.06); }
+.mrow.best .mname,.mrow.best .macc { color:var(--accent); }
+.best-tag { font-size:.62rem;background:rgba(0,198,255,.12);border:1px solid rgba(0,198,255,.25);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:700; }
+
+/* Tips */
+.tip-list { display:flex;flex-direction:column;gap:.8rem; }
+.tip { display:flex;gap:10px;align-items:flex-start; }
+.tip-dot { width:6px;height:6px;border-radius:50%;background:var(--primary);margin-top:6px;flex-shrink:0; }
+.tip p { font-size:.81rem;color:var(--text-muted);line-height:1.6;margin:0; }
+
+.back-link {
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.83rem;color:var(--text-muted);text-decoration:none;transition:color .25s;
+}
+.back-link:hover { color:var(--primary); }
+
+/* ═══════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════ */
+.load-overlay {
+  display:none;position:fixed;inset:0;z-index:5000;
+  background:rgba(7,8,15,.93);backdrop-filter:blur(18px);
+  flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;
+}
+[data-theme="light"] .load-overlay { background:rgba(244,246,251,.93); }
+.load-overlay.on { display:flex; }
+.load-ring {
+  width:68px;height:68px;border:3px solid var(--border);
+  border-top-color:var(--primary);border-right-color:var(--accent);
+  border-radius:50%;animation:spin .85s linear infinite;
+}
+.load-title { font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--text-muted);letter-spacing:.06em; }
+.load-sub { font-size:.78rem;color:var(--text-dim); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  position:relative;z-index:2;
+  border-top:1px solid var(--border);padding:2.4rem 2rem;
+  background:rgba(0,0,0,.18);
+}
+[data-theme="light"] footer { background:rgba(255,255,255,.45); }
+.footer-inner {
+  max-width:1120px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+}
+.foot-brand { display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-family:var(--font-display);font-weight:800;font-size:1rem; }
+.foot-copy { font-size:.78rem;color:var(--text-dim); }
+.foot-copy a { color:var(--primary);text-decoration:none; }
+.socials { display:flex;gap:10px; }
+.soc-icon {
+  width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-muted);font-size:.85rem;text-decoration:none;transition:all .3s;
+}
+.soc-icon:hover { border-color:var(--primary);color:var(--primary);transform:translateY(-3px);background:rgba(102,126,234,.1); }
+</style>
+</head>
+<body>
+
+<!-- Atmosphere layers -->
+<div class="noise"></div>
+<div class="grid"></div>
+
+<!-- Custom cursor -->
+<div class="cursor-dot" id="cDot"></div>
+<div class="cursor-ring" id="cRing"></div>
+
+<!-- Scroll progress -->
+<div class="scroll-bar" id="scrollBar"></div>
+
+<!-- Loading overlay (shown while Flask processes) -->
+<div class="load-overlay" id="loadOverlay">
+  <div class="load-ring"></div>
+  <div class="load-title">Analyzing your route</div>
+  <div class="load-sub">Random Forest model is predicting your fare...</div>
+</div>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav class="navbar">
+  <a href="{{ url_for('index') }}" class="nav-brand">
+    <div class="brand-icon"><i class="fas fa-plane-departure"></i></div>
+    SkyFare<span style="color:var(--accent)">AI</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('index') }}">Home</a></li>
+    <li><a class="active-link" href="{{ url_for('predict') }}">Prediction</a></li>
+    <li><a href="{{ url_for('predict') }}" class="nav-pill"><i class="fas fa-bolt"></i> Predict Now</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="theme-btn" id="themeBtn"><i class="fas fa-moon" id="themeIco"></i></div>
+    <button class="hamburger" id="ham"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="mob-menu" id="mobMenu">
+  <a href="{{ url_for('index') }}">Home</a>
+  <a href="{{ url_for('predict') }}" style="color:var(--accent)">Prediction ✦</a>
+</div>
+
+<!-- ═══ PAGE HEADER ═══ -->
+<div class="page-header">
+  <div class="header-tag"><span class="blink"></span> AI Prediction Engine</div>
+  <h1>Predict Your <em>Flight Fare</em></h1>
+  <p>Enter your journey details below. Our Random Forest model will estimate the fare instantly.</p>
+</div>
+
+<!-- ═══ MAIN LAYOUT ═══ -->
+<div class="predict-wrap">
+
+  <!-- ── FORM CARD ── -->
+  <div class="form-card">
+    <div class="card-title">Journey Details</div>
+    <div class="card-sub">All fields are required for an accurate prediction.</div>
+    <div class="card-hr"></div>
+
+    <!--
+      ┌─────────────────────────────────────────────────────────┐
+      │  FLASK-COMPATIBLE FORM                                  │
+      │  Field names match your original predict.html exactly:  │
+      │  departure, arrival, source, destination, stopage,      │
+      │  airline → these are what your Flask app.py reads.      │
+      └─────────────────────────────────────────────────────────┘
+    -->
+    <form action="{{ url_for('predict') }}" method="POST" id="pForm">
+
+      <!-- DATE & TIME -->
+      <div class="fsec"><span>Date &amp; Time</span></div>
+      <div class="frow">
+        <div class="fgroup">
+          <label><i class="fas fa-calendar-alt"></i> Departure</label>
+          <input type="datetime-local" name="departure" id="departure" class="fc" required>
+        </div>
+        <div class="fgroup">
+          <label><i class="fas fa-calendar-check"></i> Arrival</label>
+          <input type="datetime-local" name="arrival" id="arrival" class="fc" required>
+        </div>
+      </div>
+
+      <!-- ROUTE -->
+      <div class="fsec"><span>Route</span></div>
+      <div class="frow">
+        <div class="fgroup">
+          <label><i class="fas fa-map-marker-alt"></i> Source</label>
+          <div class="sw">
+            <select name="source" id="src" class="fc" required onchange="filterDest(this.value)">
+              <option value="" disabled selected>Select departure city</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Chennai">Chennai</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label><i class="fas fa-flag-checkered"></i> Destination</label>
+          <div class="sw">
+            <select name="destination" id="dest" class="fc" required>
+              <option value="" disabled selected>Select arrival city</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Bangalore">Bangalore</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- AIRLINE & STOPS -->
+      <div class="fsec"><span>Airline &amp; Stops</span></div>
+      <div class="frow">
+        <div class="fgroup">
+          <label><i class="fas fa-plane"></i> Airline</label>
+          <div class="sw">
+            <select name="airline" class="fc" required>
+
+            <option value="" disabled selected>Select airline</option>
+
+            <option value="Vistara">Vistara</option>
+
+            <option value="Air_India">Air India</option>
+
+            <option value="Indigo">IndiGo</option>
+
+            <option value="AirAsia">Air Asia</option>
+
+            <option value="GO_FIRST">GO FIRST</option>
+
+            <option value="SpiceJet">SpiceJet</option>
+
+            <option value="AkasaAir">Akasa Air</option>
+
+            <option value="AllianceAir">Alliance Air</option>
+
+            <option value="StarAir">Star Air</option>
+
+</select>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label><i class="fas fa-route"></i> Stops</label>
+          <div class="sw">
+            <select name="stopage" class="fc" required>
+              <option value="" disabled selected>Number of stops</option>
+              <option value="0">Non-Stop</option>
+              <option value="1">1 Stop</option>
+              <option value="2">2 Stops</option>
+              <option value="3">3 Stops</option>
+              <option value="4">4 Stops</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMIT BUTTON -->
+      <button type="submit" class="btn-predict" id="submitBtn">
+        <span class="btn-text">
+          <i class="fas fa-bolt" style="margin-right:8px"></i>Predict Flight Fare
+        </span>
+        <div class="btn-spin"></div>
+      </button>
+
+      <!-- ══════════════════════════════════════════
+           RESULT BLOCK — rendered by Flask/Jinja2
+           prediction_text comes from your app.py
+           e.g. "The Estimated Flight Fare is Rs. 5420"
+           or an error string if something went wrong.
+      ═══════════════════════════════════════════ -->
+      {% if prediction_text %}
+        {% set pt = prediction_text | string %}
+        {% if 'error' in pt.lower() or 'invalid' in pt.lower() or 'please' in pt.lower() or 'wrong' in pt.lower() %}
+          <!-- ERROR STATE -->
+          <div class="result-box is-error" id="resultBox">
+            <div class="res-label">⚠ Prediction Error</div>
+            <div class="res-price res-err-text">{{ prediction_text }}</div>
+            <div class="res-note">Please check your inputs and try again.</div>
+          </div>
+        {% else %}
+          <!-- SUCCESS STATE -->
+          <div class="result-box success" id="resultBox">
+            <div class="res-badge"><span class="dot"></span> Prediction Ready</div>
+            <div class="res-label">Estimated Fare</div>
+            <div class="res-price">{{ prediction_text }}</div>
+            <div class="res-note">Predicted by Random Forest · 93.8% model accuracy</div>
+          </div>
+        {% endif %}
+      {% endif %}
+
+    </form>
+  </div>
+
+  <!-- ── RIGHT / SIDE PANEL ── -->
+  <div class="side-panel">
+
+    <!-- Model accuracy -->
+    <div class="icard">
+      <h4><i class="fas fa-brain"></i> Model Accuracy</h4>
+      <p style="font-size:.81rem;color:var(--text-muted);line-height:1.65;margin-bottom:1rem;">
+        Our Random Forest Regressor is trained on thousands of Indian domestic flight records for maximum precision.
+      </p>
+      <div class="acc-bar-track">
+        <div class="acc-bar-fill" id="accBar"></div>
+      </div>
+      <div class="acc-bar-meta">
+        <span>Best Model Accuracy</span>
+        <span>93.8%</span>
+      </div>
+    </div>
+
+    <!-- Benchmarks -->
+    <div class="icard">
+      <h4><i class="fas fa-chart-bar"></i> Model Benchmarks</h4>
+      <div class="model-list">
+        <div class="mrow best">
+          <span class="mname">✦ Random Forest</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="macc">93.8%</span>
+            <span class="best-tag">BEST</span>
+          </div>
+        </div>
+        <div class="mrow">
+          <span class="mname">Extra Trees</span>
+          <span class="macc">93.7%</span>
+        </div>
+        <div class="mrow">
+          <span class="mname">XGBoost</span>
+          <span class="macc">82.0%</span>
+        </div>
+        <div class="mrow">
+          <span class="mname">Linear Regression</span>
+          <span class="macc">72.0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking tips -->
+    <div class="icard">
+      <h4><i class="fas fa-lightbulb"></i> Booking Tips</h4>
+      <div class="tip-list">
+        <div class="tip"><div class="tip-dot"></div><p>Book 6–8 weeks in advance for the best domestic fares.</p></div>
+        <div class="tip"><div class="tip-dot"></div><p>Tuesday &amp; Wednesday departures tend to be cheaper than weekends.</p></div>
+        <div class="tip"><div class="tip-dot"></div><p>Early morning or late night flights often have lower prices.</p></div>
+        <div class="tip"><div class="tip-dot"></div><p>Connecting flights can be significantly cheaper on longer routes.</p></div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+
+  </div><!-- /side-panel -->
+
+</div><!-- /predict-wrap -->
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="footer-inner">
+    <a href="{{ url_for('index') }}" class="foot-brand">
+      <div class="brand-icon" style="width:32px;height:32px;font-size:.8rem;">
+        <i class="fas fa-plane-departure"></i>
+      </div>
+      SkyFare<span style="color:var(--accent)">AI</span>
+    </a>
+    <span class="foot-copy">
+      © 2024 SkyFare AI · Built by
+      <a href="https://linkedin.com/in/aditya-singh-tomar-1683a3279" target="_blank">Aditya Singh Tomar</a>
+    </span>
+    <div class="socials">
+      <a href="https://github.com/Adityatomar28" target="_blank" class="soc-icon" title="GitHub">
+        <i class="fab fa-github"></i>
+      </a>
+      <a href="https://linkedin.com/in/aditya-singh-tomar-1683a3279" target="_blank" class="soc-icon" title="LinkedIn">
+        <i class="fab fa-linkedin-in"></i>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════
+   CURSOR
+══════════════════════════════════════════════ */
+const cDot = document.getElementById('cDot');
+const cRing = document.getElementById('cRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cDot.style.left=mx+'px'; cDot.style.top=my+'px';
+});
+(function loop(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  cRing.style.left=rx+'px'; cRing.style.top=ry+'px';
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a,button,.theme-btn,.icard,select,input').forEach(el => {
+  el.addEventListener('mouseenter', () => { cDot.classList.add('on'); cRing.classList.add('on'); });
+  el.addEventListener('mouseleave', () => { cDot.classList.remove('on'); cRing.classList.remove('on'); });
+});
+
+/* ══════════════════════════════════════════════
+   SCROLL PROGRESS
+══════════════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('scrollBar').style.width = pct + '%';
+});
+
+/* ══════════════════════════════════════════════
+   THEME TOGGLE
+══════════════════════════════════════════════ */
+let isDark = true;
+document.getElementById('themeBtn').addEventListener('click', () => {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeIco').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+});
+
+/* ══════════════════════════════════════════════
+   MOBILE MENU
+══════════════════════════════════════════════ */
+document.getElementById('ham').addEventListener('click', () => {
+  document.getElementById('mobMenu').classList.toggle('open');
+});
+document.querySelectorAll('#mobMenu a').forEach(a =>
+  a.addEventListener('click', () => document.getElementById('mobMenu').classList.remove('open'))
+);
+
+/* ══════════════════════════════════════════════
+   ACCURACY BAR — animate on load
+══════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  setTimeout(() => { document.getElementById('accBar').style.width = '93.8%'; }, 500);
+});
+
+/* ══════════════════════════════════════════════
+   DESTINATION FILTER
+   Same logic as original — hides source city
+   in destination dropdown to avoid same city.
+══════════════════════════════════════════════ */
+function filterDest(srcVal) {
+  const dest = document.getElementById('dest');
+  Array.from(dest.options).forEach(opt => {
+    if (!opt.value || opt.disabled) return;
+    opt.hidden = (opt.value === srcVal);
+  });
+  if (dest.value === srcVal) { dest.value = ''; }
+}
+
+/* ══════════════════════════════════════════════
+   FORM SUBMIT — show loading overlay
+   The page will reload with prediction_text
+   from Flask after the POST completes.
+══════════════════════════════════════════════ */
+document.getElementById('pForm').addEventListener('submit', function(e) {
+  /* Basic client-side validation before submitting */
+  const dep = document.getElementById('departure').value;
+  const arr = document.getElementById('arrival').value;
+  if (dep && arr && new Date(arr) <= new Date(dep)) {
+    e.preventDefault();
+    alert('Arrival time must be after departure time.');
+    return;
+  }
+  /* Show overlay while Flask processes */
+  document.getElementById('loadOverlay').classList.add('on');
+  document.getElementById('submitBtn').classList.add('busy');
+});
+
+/* ══════════════════════════════════════════════
+   SET MIN DATETIME to now
+══════════════════════════════════════════════ */
+(function() {
+  const pad = n => String(n).padStart(2, '0');
+  const now = new Date();
+  const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById('departure').min = local;
+  document.getElementById('arrival').min = local;
+})();
+
+/* ══════════════════════════════════════════════
+   AUTO-SCROLL to result after Flask POST
+   (prediction_text present = page reloaded
+   with a result, scroll to show it)
+══════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  const resultBox = document.getElementById('resultBox');
+  if (resultBox) {
+    setTimeout(() => {
+      resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 350);
+  }
+});
+</script>
+
+</body>
+</html>

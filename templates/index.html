@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SkyFare AI — Flight Fare Prediction</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap"
+rel="stylesheet">
+
+<style>
+
+/* ===== GLOBAL ===== */
+
+body{
+margin:0;
+font-family:'DM Sans',sans-serif;
+background:#07080f;
+color:white;
+overflow-x:hidden;
+}
+
+/* ===== GRID BACKGROUND ===== */
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+
+background-image:
+linear-gradient(rgba(102,126,234,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(102,126,234,0.05) 1px, transparent 1px);
+
+background-size:60px 60px;
+z-index:-1;
+}
+
+/* ===== NAVBAR ===== */
+
+.navbar{
+position:fixed;
+top:0;
+left:0;
+right:0;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:18px 40px;
+
+background:rgba(0,0,0,0.6);
+backdrop-filter:blur(10px);
+}
+
+.navbar h2{
+font-family:'Syne',sans-serif;
+margin:0;
+}
+
+.nav-links a{
+color:white;
+margin:0 14px;
+text-decoration:none;
+}
+
+.predict-btn{
+background:linear-gradient(135deg,#667eea,#764ba2);
+padding:10px 22px;
+border-radius:30px;
+}
+
+/* ===== HERO ===== */
+
+.hero{
+
+min-height:100vh;
+
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+
+text-align:center;
+padding-top:80px;
+}
+
+.hero h1{
+
+font-size:72px;
+font-family:'Syne',sans-serif;
+margin:0;
+
+background:linear-gradient(90deg,#00c6ff,#0072ff);
+
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.hero p{
+
+margin-top:20px;
+max-width:600px;
+color:#bbb;
+}
+
+.hero-btn{
+
+margin-top:30px;
+
+padding:16px 36px;
+
+background:linear-gradient(135deg,#667eea,#764ba2);
+
+border-radius:40px;
+text-decoration:none;
+color:white;
+
+font-size:18px;
+}
+
+/* ===== SECTION ===== */
+
+.section{
+
+padding:120px 20px;
+text-align:center;
+}
+
+.card{
+
+margin-top:40px;
+
+padding:40px;
+
+background:rgba(255,255,255,0.05);
+
+border-radius:20px;
+
+backdrop-filter:blur(10px);
+}
+
+/* ===== FOOTER ===== */
+
+footer{
+
+padding:40px;
+text-align:center;
+
+border-top:1px solid rgba(255,255,255,0.1);
+}
+
+footer a{
+
+color:#00c6ff;
+text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<div class="navbar">
+
+<h2>
+
+SkyFare <span style="color:#00c6ff;">AI</span>
+
+</h2>
+
+<div class="nav-links">
+
+<a href="{{ url_for('index') }}">
+Home
+</a>
+
+<a href="#about">
+About
+</a>
+
+<a href="#performance">
+Performance
+</a>
+
+<a href="{{ url_for('predict') }}"
+class="predict-btn">
+
+Predict Now
+
+</a>
+
+</div>
+
+</div>
+
+<!-- HERO -->
+
+<section class="hero">
+
+<h1>
+
+Predict Your Flight Fare
+
+</h1>
+
+<p>
+
+Harness the power of Random Forest Machine Learning to forecast airline ticket prices before you book.
+
+</p>
+
+<a href="{{ url_for('predict') }}"
+class="hero-btn">
+
+Get Your Prediction
+
+</a>
+
+</section>
+
+<!-- ABOUT -->
+
+<section
+id="about"
+class="section">
+
+<h2>
+
+About the Project
+
+</h2>
+
+<div class="card">
+
+SkyFare AI uses historical airline data and machine learning algorithms
+to predict ticket prices with high accuracy.
+
+</div>
+
+</section>
+
+<!-- PERFORMANCE -->
+
+<section
+id="performance"
+class="section">
+
+<h2>
+
+Model Performance
+
+</h2>
+
+<div class="card">
+
+<h1>
+
+93.8% Accuracy
+
+</h1>
+
+<p>
+
+R² Score: 0.90
+
+</p>
+
+</div>
+
+</section>
+
+<!-- CTA -->
+
+<section
+class="section">
+
+<h2>
+
+Know your fare before you book your seat
+
+</h2>
+
+<a href="{{ url_for('predict') }}"
+class="hero-btn">
+
+Predict My Flight Fare
+
+</a>
+
+</section>
+
+<!-- FOOTER -->
+
+<footer>
+
+<p>
+
+© 2024 SkyFare AI — Built by
+
+<a href="https://linkedin.com/in/aditya-singh-tomar-1683a3279"
+target="_blank">
+
+Aditya Singh Tomar
+
+</a>
+
+</p>
+
+<br>
+
+<a href="https://github.com/Adityatomar28"
+target="_blank">
+
+<i class="fab fa-github"></i>
+
+</a>
+
+&nbsp;&nbsp;
+
+<a href="https://linkedin.com/in/aditya-singh-tomar-1683a3279"
+target="_blank">
+
+<i class="fab fa-linkedin"></i>
+
+</a>
+
+</footer>
+
+</body>
+</html>
