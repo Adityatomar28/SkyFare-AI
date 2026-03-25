@@ -1,28 +1,49 @@
 ✈️ SkyFare AI — Flight Fare Prediction System
 
-A Machine Learning web application that predicts airline ticket prices based on travel details such as source, destination, date, airline, and number of stops. The system uses historical flight data, performs preprocessing and analysis, and applies a Random Forest Regressor model to generate accurate fare predictions.
+A Machine Learning web application that predicts airline ticket prices based on travel details such as source, destination, airline, and number of stops.
+The system uses historical flight data, performs preprocessing and analysis, and applies a Random Forest Regressor model to generate accurate fare predictions.
+
+🌐 Live Demo
+https://skyfare-ai.onrender.com
+🧠 Model Performance
+Model	Accuracy
+Linear Regression	72.00%
+XGBoost	82.00%
+Extra Trees Regressor	93.70%
+Random Forest Regressor	93.80%
+
+Selected Model: Random Forest
+R² Score: 0.90
 
 🎯 Features
 Predict flight prices instantly
 User-friendly web interface
+Real-time ML predictions
 Multiple model comparison
-Real-time predictions using ML
-End-to-end deployment using Flask
 Responsive modern UI
+End-to-end deployment
 🛠️ Technologies Used
-
-Programming:
-Python, HTML, CSS, JavaScript
-
-Machine Learning:
-Scikit-learn, Random Forest, XGBoost, Pandas, NumPy
-
-Web & Deployment:
-Flask, Gunicorn,GitHub
-
-Data Processing:
-BeautifulSoup, Data Cleaning, Feature Engineering, EDA
-
+Programming
+Python
+HTML
+CSS
+JavaScript
+Machine Learning
+Scikit-learn
+Random Forest
+XGBoost
+Pandas
+NumPy
+Web & Deployment
+Flask
+Gunicorn
+Render
+GitHub
+Data Processing
+BeautifulSoup
+Data Cleaning
+Feature Engineering
+Exploratory Data Analysis (EDA)
 📂 Project Structure
 SkyFare-AI
 │
@@ -47,20 +68,16 @@ pip install -r requirements.txt
 
 python app.py
 
-Open:
+Open in browser:
 
 http://127.0.0.1:5000
 📌 Example Prediction
-
 Input
-
 Source: Mumbai
 Destination: Delhi
 Stops: Non-stop
 Airline: IndiGo
-
 Output
-
 Predicted Price: ₹5239
 🚀 Skills Demonstrated
 Machine Learning
